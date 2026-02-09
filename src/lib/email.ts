@@ -52,7 +52,7 @@ function buildHtmlEmail(data: FormData): string {
                 Nieuw Evaluatieformulier Ontvangen
               </h2>
               <p style="margin:8px 0 0; color:#8A8A8A; font-size:14px;">
-                Ingevuld op ${data.datum}
+                Ingevuld op ${escapeHtml(data.datum)}
               </p>
             </td>
           </tr>
