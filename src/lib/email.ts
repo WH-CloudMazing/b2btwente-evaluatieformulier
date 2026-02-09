@@ -153,6 +153,20 @@ export async function sendEmail(data: FormData): Promise<void> {
   const fromEmail = process.env.MAIL_FROM || "noreply@b2btwente.nl";
   const fromName = process.env.MAIL_FROM_NAME || "B2B Twente";
   const toEmail = process.env.MAILTO || "info@b2btwente.nl";
+  const bccEmail = process.env.MAIL_BCC;
+  const bccEnabled = process.env.MAIL_BCC_ENABLED !== "false";
+
+  const payload: Record<string, unknown> = {
+    sender: { name: fromName, email: fromEmail },
+    to: [{ email: toEmail }],
+    replyTo: { email: data.email, name: data.naam },
+    subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
+    htmlContent: buildHtmlEmail(data),
+  };
+
+  if (bccEnabled && bccEmail) {
+    payload.bcc = [{ email: bccEmail }];
+  }
 
   const response = await fetch("https://api.brevo.com/v3/smtp/email", {
     method: "POST",
@@ -161,13 +175,7 @@ export async function sendEmail(data: FormData): Promise<void> {
       "content-type": "application/json",
       "api-key": apiKey,
     },
-    body: JSON.stringify({
-      sender: { name: fromName, email: fromEmail },
-      to: [{ email: toEmail }],
-      replyTo: { email: data.email, name: data.naam },
-      subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
-      htmlContent: buildHtmlEmail(data),
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
