@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #FF9800;
+  --color-primary-hover: #F57C00;
+  --color-primary-light: #FFF3E0;
+  --color-secondary: #6200EA;
+  --color-secondary-hover: #5000C0;
+  --color-green: #3ADB76;
+  --color-bg: #ffffff;
+  --color-bg-light: #f0f0f0;
+  --color-text: #424242;
+  --color-text-muted: #8A8A8A;
+  --color-text-light: #A8A8A8;
+  --color-border: #e6e6e6;
+  --color-error: #EB4127;
+  --color-success: #3ADB76;
+  --font-sans: var(--font-roboto);
+}
+
+body {
+  background: var(--color-bg-light);
+  color: var(--color-text);
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom radio card animations */
+.radio-card {
+  transition: all 0.2s ease;
+}
+
+.radio-card:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+}
+
+.radio-card.selected {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+
+/* Slide-in animation for conditional textarea */
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+    transform: translateY(0);
+  }
+}
+
+/* Success checkmark animation */
+.success-checkmark {
+  animation: scaleIn 0.4s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Form field focus animation */
+input:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+/* Submit button */
+.btn-submit {
+  transition: all 0.2s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Spinner animation */
+.spinner {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
