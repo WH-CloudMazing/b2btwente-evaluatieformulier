@@ -1,5 +1,3 @@
-import nodemailer from "nodemailer";
-
 interface FormData {
   contactBron: string;
   interesse: string;
@@ -147,21 +145,33 @@ function escapeHtml(text: string): string {
 }
 
 export async function sendEmail(data: FormData): Promise<void> {
-  const transport = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error("BREVO_API_KEY is not configured");
+  }
+
+  const fromEmail = process.env.MAIL_FROM || "noreply@b2btwente.nl";
+  const fromName = process.env.MAIL_FROM_NAME || "B2B Twente";
+  const toEmail = process.env.MAILTO || "info@b2btwente.nl";
+
+  const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+    method: "POST",
+    headers: {
+      "accept": "application/json",
+      "content-type": "application/json",
+      "api-key": apiKey,
     },
+    body: JSON.stringify({
+      sender: { name: fromName, email: fromEmail },
+      to: [{ email: toEmail }],
+      replyTo: { email: data.email, name: data.naam },
+      subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
+      htmlContent: buildHtmlEmail(data),
+    }),
   });
 
-  await transport.sendMail({
-    from: process.env.SMTP_FROM || "noreply@b2btwente.nl",
-    to: process.env.MAILTO || "info@b2btwente.nl",
-    replyTo: data.email,
-    subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
-    html: buildHtmlEmail(data),
-  });
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Brevo API error: ${response.status} ${error}`);
+  }
 }
