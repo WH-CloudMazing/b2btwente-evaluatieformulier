@@ -12,6 +12,9 @@ export const metadata: Metadata = {
   title: "Evaluatieformulier Gasten | B2B Twente",
   description:
     "Evaluatieformulier voor gasten van B2B Twente - resultaatgericht netwerken",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
