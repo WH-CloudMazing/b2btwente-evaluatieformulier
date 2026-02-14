@@ -103,7 +103,7 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
           vestigingsplaats: vestigingsplaats.trim(),
           telefoonnummer: telefoonnummer.trim(),
           email: email.trim(),
-          datum: selectedDate,
+          datum: selectedDate || undefined,
         }),
       });
 
@@ -142,33 +142,6 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
 
   if (submitted) {
     return <SuccessMessage onReset={handleReset} />;
-  }
-
-  if (dates.length === 0) {
-    return (
-      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10 text-center">
-        <svg
-          className="w-12 h-12 mx-auto mb-4 text-text-muted"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-          />
-        </svg>
-        <h2 className="text-xl font-bold text-text mb-2">
-          Geen aankomende bijeenkomsten
-        </h2>
-        <p className="text-text-muted">
-          Er zijn momenteel geen aankomende bijeenkomsten. Kom later terug voor
-          nieuwe data.
-        </p>
-      </div>
-    );
   }
 
   return (
@@ -383,58 +356,60 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
         </div>
       </fieldset>
 
-      {/* Date selection */}
-      <fieldset className="mb-8">
-        <label
-          htmlFor="datum"
-          className="block text-sm font-medium text-text mb-2"
-        >
-          Datum bijeenkomst
-          {dates.length > 1 && <span className="text-error ml-1">*</span>}
-        </label>
-        {dates.length === 1 ? (
-          <div className="flex items-center gap-2 text-sm text-text-muted">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-            {dates[0].label}
-          </div>
-        ) : (
-          <>
-            <select
-              id="datum"
-              value={selectedDate}
-              onChange={(e) => {
-                setSelectedDate(e.target.value);
-                if (errors.datum) setErrors((prev) => ({ ...prev, datum: "" }));
-              }}
-              className={`w-full px-4 py-3 rounded-lg border ${
-                errors.datum ? "border-error" : "border-border"
-              } text-text bg-white transition-colors`}
-            >
-              <option value="">Kies een datum...</option>
-              {dates.map((d) => (
-                <option key={d.iso} value={d.label}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
-            {errors.datum && (
-              <p className="mt-1 text-sm text-error">{errors.datum}</p>
-            )}
-          </>
-        )}
-      </fieldset>
+      {/* Date selection — only shown when event dates are configured */}
+      {dates.length > 0 && (
+        <fieldset className="mb-8">
+          <label
+            htmlFor="datum"
+            className="block text-sm font-medium text-text mb-2"
+          >
+            Datum bijeenkomst
+            {dates.length > 1 && <span className="text-error ml-1">*</span>}
+          </label>
+          {dates.length === 1 ? (
+            <div className="flex items-center gap-2 text-sm text-text-muted">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              {dates[0].label}
+            </div>
+          ) : (
+            <>
+              <select
+                id="datum"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  if (errors.datum) setErrors((prev) => ({ ...prev, datum: "" }));
+                }}
+                className={`w-full px-4 py-3 rounded-lg border ${
+                  errors.datum ? "border-error" : "border-border"
+                } text-text bg-white transition-colors`}
+              >
+                <option value="">Kies een datum...</option>
+                {dates.map((d) => (
+                  <option key={d.iso} value={d.label}>
+                    {d.label}
+                  </option>
+                ))}
+              </select>
+              {errors.datum && (
+                <p className="mt-1 text-sm text-error">{errors.datum}</p>
+              )}
+            </>
+          )}
+        </fieldset>
+      )}
 
       {/* Server error */}
       {serverError && (

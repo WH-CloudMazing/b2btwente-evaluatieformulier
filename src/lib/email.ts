@@ -8,7 +8,7 @@ interface FormData {
   vestigingsplaats: string;
   telefoonnummer: string;
   email: string;
-  datum: string;
+  datum?: string;
 }
 
 const interesseLabels: Record<string, string> = {
@@ -51,9 +51,9 @@ function buildHtmlEmail(data: FormData): string {
               <h2 style="margin:0; color:#424242; font-size:18px;">
                 Nieuw Evaluatieformulier Ontvangen
               </h2>
-              <p style="margin:8px 0 0; color:#8A8A8A; font-size:14px;">
-                Ingevuld op ${escapeHtml(data.datum)}
-              </p>
+              ${data.datum ? `<p style="margin:8px 0 0; color:#8A8A8A; font-size:14px;">
+                Bijeenkomst: ${escapeHtml(data.datum)}
+              </p>` : ""}
             </td>
           </tr>
 
@@ -160,7 +160,9 @@ export async function sendEmail(data: FormData): Promise<void> {
     sender: { name: fromName, email: fromEmail },
     to: [{ email: toEmail }],
     replyTo: { email: data.email, name: data.naam },
-    subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
+    subject: data.datum
+      ? `Evaluatieformulier ${data.datum} - ${data.naam} (${data.onderneming})`
+      : `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
     htmlContent: buildHtmlEmail(data),
   };
 

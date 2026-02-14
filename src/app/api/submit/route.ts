@@ -11,7 +11,7 @@ interface FormPayload {
   vestigingsplaats: string;
   telefoonnummer: string;
   email: string;
-  datum: string;
+  datum?: string;
 }
 
 const VALID_INTERESSE = ["gast", "lid", "geen", "suggestie"];
@@ -67,7 +67,6 @@ function validatePayload(
     "vestigingsplaats",
     "telefoonnummer",
     "email",
-    "datum",
   ];
 
   for (const field of requiredFields) {
@@ -98,9 +97,12 @@ function validatePayload(
     return { valid: false, error: "Ongeldig e-mailadres." };
   }
 
-  const datumStr = String(data.datum).trim();
-  if (!DATUM_REGEX.test(datumStr)) {
-    return { valid: false, error: "Ongeldig datumformaat." };
+  let datumStr: string | undefined;
+  if (data.datum && typeof data.datum === "string" && String(data.datum).trim()) {
+    datumStr = String(data.datum).trim();
+    if (!DATUM_REGEX.test(datumStr)) {
+      return { valid: false, error: "Ongeldig datumformaat." };
+    }
   }
 
   return {
