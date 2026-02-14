@@ -20,8 +20,9 @@ No test framework is configured.
 
 Next.js 16 App Router with a single page and one API route:
 
-- **`src/app/page.tsx`** — Server component. Reads `EVENT_DATES` env var, filters past dates, formats with `nl-NL` locale, passes to form.
-- **`src/components/EvaluatieFormulier.tsx`** — Client component. The entire form with client-side validation. Shows `SuccessMessage` after submit. Shows "no upcoming events" when dates are empty.
+- **`src/app/page.tsx`** — Server component. Renders layout with Header, EvaluatieFormulier, and Footer.
+- **`src/components/EvaluatieFormulier.tsx`** — Client component. Fetches `/dates.json` on mount, filters past dates client-side, renders the full form with validation. Shows `SuccessMessage` after submit. Hides date selector when no dates are available.
+- **`public/dates.json`** — Event dates file. Update every 6 months with dates from https://b2btwente.nl/bijeenkomsten. Parsed client-side so past dates are filtered per visit (no rebuild needed).
 - **`src/app/api/submit/route.ts`** — POST handler. In-memory rate limiter (5/min/IP), input validation, calls `sendEmail()`.
 - **`src/lib/email.ts`** — Builds HTML email and sends via Brevo REST API (`https://api.brevo.com/v3/smtp/email`). Supports optional BCC.
 
@@ -47,7 +48,6 @@ See `.env.example`. Required for email delivery:
 | `MAILTO` | Recipient email address |
 | `MAIL_BCC_ENABLED` | Enable BCC (`true`/`false`) |
 | `MAIL_BCC` | BCC email address |
-| `EVENT_DATES` | Comma-separated ISO dates (e.g. `2026-03-15,2026-04-20`) |
 
 ## Path Alias
 

@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import SuccessMessage from "./SuccessMessage";
+
+interface FormErrors {
+  [key: string]: string;
+}
 
 interface EventDate {
   label: string;
   iso: string;
 }
 
-interface EvaluatieFormulierProps {
-  dates: EventDate[];
-}
-
-interface FormErrors {
-  [key: string]: string;
-}
+const dateFormatter = new Intl.DateTimeFormat("nl-NL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric",
+});
 
 const interesseOpties = [
   {
@@ -38,7 +40,26 @@ const interesseOpties = [
   },
 ];
 
-export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function parseDates(isoStrings: string[]): EventDate[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return isoStrings
+    .map((iso) => {
+      const date = new Date(iso + "T00:00:00");
+      return { iso, date };
+    })
+    .filter(({ date }) => !isNaN(date.getTime()) && date >= today)
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(({ iso, date }) => ({ label: dateFormatter.format(date), iso }));
+}
+
+export default function EvaluatieFormulier() {
+  const formRef = useRef<HTMLFormElement>(null);
+  const [dates, setDates] = useState<EventDate[]>([]);
+  const [datesLoaded, setDatesLoaded] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState("");
@@ -53,10 +74,29 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
   const [vestigingsplaats, setVestigingsplaats] = useState("");
   const [telefoonnummer, setTelefoonnummer] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedDate, setSelectedDate] = useState("");
 
-  const [selectedDate, setSelectedDate] = useState(
-    dates.length === 1 ? dates[0].label : ""
-  );
+  useEffect(() => {
+    fetch("/dates.json")
+      .then((res) => (res.ok ? res.json() : { dates: [] }))
+      .then((json) => {
+        const parsed = parseDates(json.dates ?? []);
+        setDates(parsed);
+        if (parsed.length === 1) setSelectedDate(parsed[0].label);
+      })
+      .catch(() => setDates([]))
+      .finally(() => setDatesLoaded(true));
+  }, []);
+
+  function scrollToFirstError(errs: FormErrors) {
+    const firstKey = Object.keys(errs).find((k) => errs[k]);
+    if (!firstKey || !formRef.current) return;
+    const el = formRef.current.querySelector(`[id="${firstKey}"], [name="${firstKey}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      (el as HTMLElement).focus?.();
+    }
+  }
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
@@ -72,7 +112,7 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
     if (!telefoonnummer.trim()) errs.telefoonnummer = "Dit veld is verplicht";
     if (!email.trim()) {
       errs.email = "Dit veld is verplicht";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    } else if (!EMAIL_REGEX.test(email)) {
       errs.email = "Ongeldig e-mailadres";
     }
     return errs;
@@ -84,7 +124,10 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
 
     const validationErrors = validate();
     setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      scrollToFirstError(validationErrors);
+      return;
+    }
 
     setLoading(true);
 
@@ -144,8 +187,17 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
     return <SuccessMessage onReset={handleReset} />;
   }
 
+  if (!datesLoaded) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-10 text-center">
+        <p className="text-text-muted">Laden...</p>
+      </div>
+    );
+  }
+
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       noValidate
       className="bg-white rounded-2xl shadow-lg p-6 sm:p-10"
@@ -243,6 +295,7 @@ export default function EvaluatieFormulier({ dates }: EvaluatieFormulierProps) {
               {optie.value === "suggestie" && interesse === "suggestie" && (
                 <div className="slide-in mt-3 ml-8">
                   <textarea
+                    id="verbetersuggestie"
                     value={verbetersuggestie}
                     onChange={(e) => {
                       setVerbetersuggestie(e.target.value);
