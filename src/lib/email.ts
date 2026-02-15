@@ -51,9 +51,6 @@ function buildHtmlEmail(data: FormData): string {
               <h2 style="margin:0; color:#424242; font-size:18px;">
                 Nieuw Evaluatieformulier Ontvangen
               </h2>
-              ${data.datum ? `<p style="margin:8px 0 0; color:#8A8A8A; font-size:14px;">
-                Bijeenkomst: ${escapeHtml(data.datum)}
-              </p>` : ""}
             </td>
           </tr>
 
@@ -78,6 +75,12 @@ function buildHtmlEmail(data: FormData): string {
               <p style="margin:0; color:#424242; font-size:15px;">
                 ${escapeHtml(interesseText)}
               </p>
+              ${
+                data.interesse === "gast" && data.datum
+                  ? `<p style="margin:8px 0 0; color:#8A8A8A; font-size:13px;">Voorkeursdatum: ${escapeHtml(data.datum)}</p>
+                     <p style="margin:8px 0 0; padding:10px 12px; background-color:#FFF3E0; border-left:3px solid #FF9800; border-radius:4px; color:#424242; font-size:13px;">Graag deze gast uitnodigen voor deze bijeenkomst.</p>`
+                  : ""
+              }
               ${
                 data.interesse === "suggestie" && data.verbetersuggestie
                   ? `<p style="margin:8px 0 0; padding:12px; background-color:#f0f0f0; border-radius:8px; color:#424242; font-size:14px;">${escapeHtml(data.verbetersuggestie)}</p>`
@@ -147,7 +150,10 @@ function escapeHtml(text: string): string {
 export async function sendEmail(data: FormData): Promise<void> {
   const apiKey = process.env.BREVO_API_KEY;
   if (!apiKey) {
-    throw new Error("BREVO_API_KEY is not configured");
+    console.log("\n━━━ Form Submission (no BREVO_API_KEY configured) ━━━");
+    console.log(JSON.stringify(data, null, 2));
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
+    return;
   }
 
   const fromEmail = process.env.MAIL_FROM || "noreply@b2btwente.nl";
@@ -160,9 +166,7 @@ export async function sendEmail(data: FormData): Promise<void> {
     sender: { name: fromName, email: fromEmail },
     to: [{ email: toEmail }],
     replyTo: { email: data.email, name: data.naam },
-    subject: data.datum
-      ? `Evaluatieformulier ${data.datum} - ${data.naam} (${data.onderneming})`
-      : `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
+    subject: `Evaluatieformulier - ${data.naam} (${data.onderneming})`,
     htmlContent: buildHtmlEmail(data),
   };
 
