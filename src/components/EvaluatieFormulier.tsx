@@ -80,9 +80,7 @@ export default function EvaluatieFormulier() {
     fetch("/dates.json")
       .then((res) => (res.ok ? res.json() : { dates: [] }))
       .then((json) => {
-        const parsed = parseDates(json.dates ?? []);
-        setDates(parsed);
-        if (parsed.length === 1) setSelectedDate(parsed[0].label);
+        setDates(parseDates(json.dates ?? []));
       })
       .catch(() => setDates([]))
       .finally(() => setDatesLoaded(true));
@@ -100,7 +98,6 @@ export default function EvaluatieFormulier() {
 
   function validate(): FormErrors {
     const errs: FormErrors = {};
-    if (dates.length > 1 && !selectedDate) errs.datum = "Kies een datum";
     if (!contactBron.trim()) errs.contactBron = "Dit veld is verplicht";
     if (!interesse) errs.interesse = "Maak een keuze";
     if (interesse === "suggestie" && !verbetersuggestie.trim())
@@ -146,7 +143,7 @@ export default function EvaluatieFormulier() {
           vestigingsplaats: vestigingsplaats.trim(),
           telefoonnummer: telefoonnummer.trim(),
           email: email.trim(),
-          datum: selectedDate || undefined,
+          datum: interesse === "gast" && selectedDate ? selectedDate : undefined,
         }),
       });
 
@@ -178,7 +175,7 @@ export default function EvaluatieFormulier() {
     setVestigingsplaats("");
     setTelefoonnummer("");
     setEmail("");
-    setSelectedDate(dates.length === 1 ? dates[0].label : "");
+    setSelectedDate("");
     setErrors({});
     setServerError("");
   }
@@ -290,6 +287,31 @@ export default function EvaluatieFormulier() {
                   )}
                 </span>
               </label>
+
+              {/* Conditional date selector for gast */}
+              {optie.value === "gast" && interesse === "gast" && dates.length > 0 && (
+                <div className="slide-in mt-3 ml-8">
+                  <label
+                    htmlFor="datum"
+                    className="block text-sm text-text-muted mb-1"
+                  >
+                    Voorkeursdatum bijeenkomst
+                  </label>
+                  <select
+                    id="datum"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg border border-border text-text bg-white transition-colors"
+                  >
+                    <option value="">Geen voorkeur</option>
+                    {dates.map((d) => (
+                      <option key={d.iso} value={d.label}>
+                        {d.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {/* Conditional textarea for suggestie */}
               {optie.value === "suggestie" && interesse === "suggestie" && (
@@ -408,61 +430,6 @@ export default function EvaluatieFormulier() {
           />
         </div>
       </fieldset>
-
-      {/* Date selection — only shown when event dates are configured */}
-      {dates.length > 0 && (
-        <fieldset className="mb-8">
-          <label
-            htmlFor="datum"
-            className="block text-sm font-medium text-text mb-2"
-          >
-            Datum bijeenkomst
-            {dates.length > 1 && <span className="text-error ml-1">*</span>}
-          </label>
-          {dates.length === 1 ? (
-            <div className="flex items-center gap-2 text-sm text-text-muted">
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              {dates[0].label}
-            </div>
-          ) : (
-            <>
-              <select
-                id="datum"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  if (errors.datum) setErrors((prev) => ({ ...prev, datum: "" }));
-                }}
-                className={`w-full px-4 py-3 rounded-lg border ${
-                  errors.datum ? "border-error" : "border-border"
-                } text-text bg-white transition-colors`}
-              >
-                <option value="">Kies een datum...</option>
-                {dates.map((d) => (
-                  <option key={d.iso} value={d.label}>
-                    {d.label}
-                  </option>
-                ))}
-              </select>
-              {errors.datum && (
-                <p className="mt-1 text-sm text-error">{errors.datum}</p>
-              )}
-            </>
-          )}
-        </fieldset>
-      )}
 
       {/* Server error */}
       {serverError && (
